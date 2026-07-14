@@ -29,16 +29,37 @@ class BSC:
 
 
     def snr(self):
+        
         snr_lin = 1/(4*self.error_probability)
 
         snr_db = 10*np.log10(snr_lin)
+       
         return snr_db
 
 
 class PCM:
+    def __init__(self, n_bit, error_probability, analog_bandwidth=1.0):
+        self.analog_bandwidth = analog_bandwidth
+        self.adc = ADC(n_bit)
+        self.bsc = BSC(error_probability)     
+        self.M = 2**n_bit   
 
-    def __init__(self):
-        pass
+    def snr(self):
+        snr_q_db = self.adc.snr()
+        snr_bsc_db = self.bsc.snr()
+
+        snr_q_lin = 10**(snr_q_db/10)
+        snr_bsc_lin = 10**(snr_bsc_db/10)
+
+        snr_total_lin = 1/(1/snr_q_lin + 1/snr_bsc_lin)
+
+        snr_total_db = 10*np.log10(snr_total_lin)
+        return snr_total_db
+
+    def critical_pe(self):
+        M = self.M
+        return 1 / (4 * (M**2 - 1))
+
 
     
 def exercise_1():
@@ -77,7 +98,38 @@ def exercise_1():
 
 
 def exercise_2():
+    n_bit = np.array([2, 4, 8, 16], dtype='int64')
+    pe_values = np.logspace(-12, 0, num=1000)
+
+    colors = ['blue', 'orange', 'green', 'red']
+
+    plt.figure(3, figsize=(10, 6))
+
+    plt.xscale('log')
+    for i, n in enumerate(n_bit):
+        
+
+        # for pe in pe_values:
+        pcm = PCM(n, pe_values)
+        snr_values = pcm.snr()
+
+        plt.plot(pe_values, snr_values, color=colors[i], label=f'n bit={n}')
+
+        adc = ADC(n)
+        snr_q_db = adc.snr()
+        plt.axhline(y=snr_q_db, color=colors[i], linestyle='--')
+
+        p_th = pcm.critical_pe()
+        plt.axvline(x=p_th, color=colors[i], linestyle=':')
     
+    plt.xlabel('Bit Error Probability (Pe) [log scale]')
+    plt.ylabel('Overall SNR [dB]')
+    plt.title('Overall SNR vs. Bit Error Probability for different n_bit')
+    plt.grid(True)
+    plt.legend(loc='upper right', fontsize='small')
+    plt.tight_layout()
+
+    plt.savefig("PCM_ex_2.png")
 
 
 def exercise_3():
