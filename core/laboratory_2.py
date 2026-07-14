@@ -20,7 +20,8 @@ class ADC:
         self.n_bit = n_bit
 
     def snr(self):
-        return self.n_bit*6
+        snr_q_lin = 2**(2*self.n_bit)
+        return lin2db(snr_q_lin)
 
 class BSC:
     
@@ -32,7 +33,7 @@ class BSC:
         
         snr_lin = 1/(4*self.error_probability)
 
-        snr_db = 10*np.log10(snr_lin)
+        snr_db = lin2db(snr_lin)
        
         return snr_db
 
@@ -48,12 +49,12 @@ class PCM:
         snr_q_db = self.adc.snr()
         snr_bsc_db = self.bsc.snr()
 
-        snr_q_lin = 10**(snr_q_db/10)
-        snr_bsc_lin = 10**(snr_bsc_db/10)
+        snr_q_lin = db2lin(snr_q_db)
+        snr_bsc_lin = db2lin(snr_bsc_db)
 
         snr_total_lin = 1/(1/snr_q_lin + 1/snr_bsc_lin)
 
-        snr_total_db = 10*np.log10(snr_total_lin)
+        snr_total_db = lin2db(snr_total_lin)
         return snr_total_db
 
     def critical_pe(self):
@@ -108,8 +109,6 @@ def exercise_2():
     plt.xscale('log')
     for i, n in enumerate(n_bit):
         
-
-        # for pe in pe_values:
         pcm = PCM(n, pe_values)
         snr_values = pcm.snr()
 
