@@ -22,6 +22,9 @@ class ADC:
     def snr(self):
         snr_q_lin = 2**(2*self.n_bit)
         return lin2db(snr_q_lin)
+    
+   
+   
 
 class BSC:
     
@@ -60,6 +63,14 @@ class PCM:
     def critical_pe(self):
         M = self.M
         return 1 / (4 * (M**2 - 1))
+    
+    def minimum_sampling_frequency(self):
+        
+        minimum_fs = 2 * self.analog_bandwidth
+        n_steps = np.ceil(minimum_fs / ADC.fs_step)
+    
+        return n_steps * ADC.fs_step
+
 
 
     
@@ -77,7 +88,7 @@ def exercise_1():
     plt.xlabel('Number of bits')
     plt.ylabel('SNR [dB]')
 
-    print(quant_snr)
+    # print(quant_snr)
     plt.title('Quantization SNR vs. n_bit')
     plt.grid(True)
     plt.savefig("quant_snr.png")
@@ -95,6 +106,7 @@ def exercise_1():
     plt.title('BSC SNR vs. Bit Error Probability')
     plt.grid(True)
     plt.savefig("bsc_snr.png")
+    plt.show()
 
 
 
@@ -129,12 +141,33 @@ def exercise_2():
     plt.tight_layout()
 
     plt.savefig("PCM_ex_2.png")
+    plt.show()
 
 
 def exercise_3():
-    pass
+    bandwidth = 22e3
+    target_snr_db = 80
+    error_probability = 3.8e-7
 
+    min_n_bit = int(np.ceil((target_snr_db / 6)))
+    
+    adc = ADC(min_n_bit)
+    bsc = BSC(error_probability)
+    pcm = PCM(min_n_bit, error_probability, analog_bandwidth=bandwidth)
 
+    fs_min = pcm.minimum_sampling_frequency()
+    snr_q_db = adc.snr()
+    p_th = pcm.critical_pe()
+
+    supported = error_probability <= p_th
+
+    print(f"Minimum number of bits required: {min_n_bit}")
+    print(f"Minimum sampling frequency: {fs_min}")
+    print(f"Quantization SNR: {snr_q_db} dB")
+    if supported:
+        print(f"The system can support the given error probability of {error_probability}.")
+    else:
+        print(f"The system cannot support the given error probability of {error_probability}. The critical Pe is {p_th}.")
 
 if __name__ == "__main__":
     print("Laboratory 3 - ADC-BSC")
