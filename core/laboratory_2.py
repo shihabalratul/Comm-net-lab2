@@ -151,12 +151,10 @@ def exercise_3():
 
     min_n_bit = int(np.ceil((target_snr_db / 6)))
     
-    adc = ADC(min_n_bit)
-    bsc = BSC(error_probability)
-    pcm = PCM(min_n_bit, error_probability, analog_bandwidth=bandwidth)
+    pcm = PCM(min_n_bit, error_probability, bandwidth)
 
     fs_min = pcm.minimum_sampling_frequency()
-    snr_q_db = adc.snr()
+    snr_q_db = pcm.adc.snr()
     p_th = pcm.critical_pe()
 
     supported = error_probability <= p_th
