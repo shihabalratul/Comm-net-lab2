@@ -94,3 +94,4 @@ of a bit, thus an error.
     ADC is transmitted through a BSC whose error probability is
     $P_e = 3.8e-7$.
 # Comm-net-lab2
+# Com-net-lab3
