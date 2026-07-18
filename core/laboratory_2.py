@@ -17,31 +17,25 @@ def db2lin(x):
     return 10**(x/10)
 
 
-
 class ADC:
     fs_step = 2.75625e3
     
     def __init__(self, n_bit):
-        self.n_bit = n_bit
+        self.__n_bit = n_bit
+
+    @property
+    def n_bit(self):
+        return self.__n_bit
+    
+    @n_bit.setter
+    def n_bit(self, value):
+        self.__n_bit = value
 
     def snr(self):
         snr_q_lin = 2**(2*self.n_bit)
         return lin2db(snr_q_lin)
    
 
-class BSC:
-    
-    def __init__(self, error_probability):
-        self.error_probability = error_probability
-
-
-    def snr(self):
-        
-        snr_lin = 1/(4*self.error_probability)
-
-        snr_db = lin2db(snr_lin)
-       
-        return snr_db
 
 
 
@@ -136,18 +130,8 @@ class PCM:
             ber = (3/8)*erfc(np.sqrt(snr_lin/10))
         
         return ber
-
-    def critical_pe(self):
-        M = self.M
-        return 1 / (4 * (M**2 - 1))
     
-    def minimum_sampling_frequency(self):
-        
-        minimum_fs = 2 * self.analog_bandwidth
-        n_steps = np.ceil(minimum_fs / ADC.fs_step)
-    
-        return n_steps * ADC.fs_step
-
+   
 
 
 
@@ -234,10 +218,10 @@ def plot(lengths_km, results, ber_th, name=""):
             
             plt.plot(lengths_km, log_ber, label=mod_name)
 
-            crossed_idxs = np.where(ber > ber_th)[0] 
-            if len(crossed_idxs) > 0:
-                first_failure_i = crossed_idxs[0]
-                l_max = lengths_km[first_failure_i]
+            valid_idxs = np.where(ber <= ber_th)[0]
+            if len(valid_idxs) > 0:
+                last_valid_i = valid_idxs[-1]
+                l_max = lengths_km[last_valid_i]
                 
                 plt.axvline(x=l_max, color='purple', linestyle='--', alpha=0.8, 
                             label=f'{mod_name} Lmax ({l_max:.1f} km)')
